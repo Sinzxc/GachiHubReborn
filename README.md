@@ -23,3 +23,22 @@ GachiHub - это настоящий Dungeon Master среди приложен�
 npm install     # ♂ Take it boy! ♂
 npm run dev     # ♂ Fuck you! ♂
 ```
+
+## ♂ Функционал
+
+- 🎤 Голосовые каналы (♂ Oh my shoulder! ♂)
+- 💪 Профиль пользователя (♂ Show your muscles! ♂)
+- 🤼‍♂️ Комнаты для общения (♂ Welcome to the club, buddy! ♂)
+
+## ♂ Coming Soon
+
+- 📹 Видеозвонки (♂ I see you! ♂)
+- 🎮 Стриминг (♂ Watch me perform! ♂)
+- 🎵 Музыкальный бот (♂ Spank! ♂)
+
+## ♂ Boss of this Project
+
+- Billy Herrington (spiritual guidance)
+- Van Darkholme (inspiration)
+- Ricardo Milos (dance moves)
+  ♂ THANK YOU SIR! ♂
