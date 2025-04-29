@@ -1,0 +1,103 @@
+import { useState } from "react";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import { faVolumeHigh, faPlus } from "@fortawesome/free-solid-svg-icons";
+import { useNavigate } from "react-router-dom";
+import IUser from "../types/IUser";
+import IRoom from "../types/IRoom";
+
+interface ChannelListProps {
+  currentUser: IUser;
+  rooms: IRoom[];
+  setCurrentRoom: (room: IRoom) => void;
+}
+
+const ChannelList = ({
+  currentUser,
+  rooms: allRooms,
+  setCurrentRoom,
+}: ChannelListProps) => {
+  const navigate = useNavigate();
+  const [rooms, setRooms] = useState<IRoom[]>(allRooms);
+
+  const addChannel = () => {
+    const channelName = prompt(
+      "Введите название голосового канала:",
+      "Новый канал"
+    );
+
+    if (channelName) {
+      const newRoom: IRoom = {
+        id: Math.max(...rooms.map((c) => c.id), 0) + 1,
+        title: channelName,
+        owner: currentUser,
+        messages: [],
+        users: [],
+        totalCount: 0,
+      };
+      setRooms([...rooms, newRoom]);
+    }
+  };
+
+  return (
+    <div className="w-full h-screen flex flex-col bg-gray-800">
+      {/* Server Header */}
+      <div className="h-12 px-4 flex items-center justify-between border-b border-gray-700/50 hover:bg-gray-700/20 transition-colors duration-200">
+        <h1 className="font-bold text-white text-lg">GachiHub</h1>
+      </div>
+
+      {/* Channel List */}
+      <div className="flex-1 overflow-y-auto px-2 py-3">
+        <div className="select-none">
+          <div className="flex items-center justify-between px-1 mb-2">
+            <span className="text-xs font-bold tracking-widest text-gray-400">
+              КОМНАТЫ
+            </span>
+            <FontAwesomeIcon
+              icon={faPlus}
+              className="text-gray-400 cursor-pointer hover:text-white text-[10px]"
+              onClick={addChannel}
+            />
+          </div>
+          <div className="space-y-1 ml-2">
+            {allRooms.map((room) => (
+              <div
+                key={room.id}
+                onClick={() => setCurrentRoom(room)}
+                className="flex items-center px-2 py-[6px] rounded-[4px] hover:bg-gray-700/40 cursor-pointer group transition-all duration-150"
+              >
+                <FontAwesomeIcon
+                  icon={faVolumeHigh}
+                  className="mr-2 text-gray-400 group-hover:text-gray-200 text-[15px]"
+                />
+                <span className="text-[15px] text-gray-400 group-hover:text-gray-200">
+                  {room.title}
+                </span>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* User Profile */}
+      <div
+        className="h-14 px-3 bg-gray-900/40 flex items-center justify-between group hover:bg-gray-900/60 transition-colors duration-200 cursor-pointer"
+        onClick={() => navigate("/profile")}
+      >
+        <div className="flex items-center">
+          <div className="w-8 h-8 rounded-full bg-[#5865f2] flex items-center justify-center text-white shadow-md">
+            <span className="text-sm font-medium">
+              {currentUser.login[0].toUpperCase()}
+            </span>
+          </div>
+          <div className="ml-2">
+            <div className="text-sm font-medium text-white">
+              {currentUser.login}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+};
+
+export default ChannelList;
