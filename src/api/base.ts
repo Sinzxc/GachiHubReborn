@@ -3,14 +3,12 @@
 
 import { IApiError } from "../types/errorTypes";
 
-export const API_URL =
-  import.meta.env.VITE_PUBLIC_API_URL || "http://localhost:5173";
+export const API_URL = `${import.meta.env.VITE_PUBLIC_API_URL}/Api`;
 
 let token: string | null = null;
 if (typeof window !== "undefined") {
   token = localStorage.getItem("token");
 }
-
 
 class ApiInstance {
   private baseURL: string;
@@ -46,10 +44,18 @@ class ApiInstance {
     options: RequestInit = {}
   ): Promise<T> {
     const url = `${this.baseURL}${endpoint}`;
+
+    // Check if the body is FormData
+    const isFormData = options.body instanceof FormData;
+
+    const headers = isFormData
+      ? { Authorization: `Bearer ${token}` }
+      : this.defaultHeaders;
+
     const response = await fetch(url, {
       ...options,
       headers: {
-        ...this.defaultHeaders,
+        ...headers,
         ...options.headers,
       },
     });
@@ -59,7 +65,6 @@ class ApiInstance {
     }
 
     const data = await response.json();
-
     return data;
   }
 
@@ -91,6 +96,28 @@ class ApiInstance {
       ...options,
       method: "PUT",
       body: data ? JSON.stringify(data) : undefined,
+    });
+  }
+
+  async uploadAvatar<T>(
+    endpoint: string,
+    file: File,
+    options: RequestInit = {}
+  ): Promise<T> {
+    if (!file) {
+      throw new Error("No file provided");
+    }
+
+    const formData = new FormData();
+    formData.append("avatar", file); // The key must match the backend parameter name 'avatar'
+
+    return this.fetchWithError<T>(endpoint, {
+      ...options,
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`, // Remove Content-Type to let browser set it correctly for FormData
+      },
+      body: formData,
     });
   }
 

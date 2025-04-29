@@ -1,6 +1,5 @@
 import { apiInstance } from "../base";
 import IUser from "../../types/IUser";
-import { ApiError } from "../../types/errorTypes";
 
 class AuthApi {
   navigate: (path: string) => void = () => {};
@@ -82,6 +81,29 @@ class AuthApi {
         default:
           throw new Error("Неизвестная ошибка");
       }
+    } finally {
+      this.isLoading = false;
+    }
+  };
+
+  uploadAvatar = async (
+    formData: FormData
+  ): Promise<{ message: string; url: string }> => {
+    try {
+      this.isLoading = true;
+      const response = await apiInstance.post<{ message: string; url: string }>(
+        "/Avatar/SetAvatar",
+        formData
+      );
+
+      if (this.currentUser) {
+        this.currentUser.avatarUrl = `/avatars/${response.url}`;
+        localStorage.setItem("user", JSON.stringify(this.currentUser));
+      }
+
+      return response;
+    } catch (error) {
+      throw new Error("Не удалось загрузить аватар");
     } finally {
       this.isLoading = false;
     }

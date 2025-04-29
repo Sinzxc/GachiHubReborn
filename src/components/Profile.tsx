@@ -3,6 +3,8 @@ import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faXmark, faCamera } from "@fortawesome/free-solid-svg-icons";
 import IUser from "../types/IUser";
 import { useNavigate } from "react-router-dom";
+import { authApi } from "../api/services/authApi";
+import { apiInstance } from "../api/base";
 
 interface ProfileProps {
   user: IUser;
@@ -14,6 +16,20 @@ const Profile = ({ user, setUser }: ProfileProps) => {
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const navigate = useNavigate();
+  const baseURL = import.meta.env.VITE_PUBLIC_API_URL;
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.item(0);
+    if (file) {
+      try {
+        await apiInstance.uploadAvatar("/Avatar/SetAvatar", file);
+      } catch (error: any) {
+        alert(error.message || "Failed to upload avatar");
+      } finally {
+        authApi.getUser();
+      }
+    }
+  };
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,7 +45,7 @@ const Profile = ({ user, setUser }: ProfileProps) => {
   return (
     <div className="bg-gray-700 w-full h-full flex flex-col">
       <div className="flex items-center justify-between p-4 border-b border-gray-600">
-        <h1 className="text-xl font-bold text-white">User Settings</h1>
+        <h1 className="text-xl font-bold text-white">Настройки пользователя</h1>
         <button
           onClick={() => {
             navigate("/");
@@ -85,15 +101,32 @@ const Profile = ({ user, setUser }: ProfileProps) => {
                 AVATAR
               </label>
               <div className="relative w-24 h-24 group cursor-pointer">
-                <div className="w-full h-full rounded-lg bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
-                  {login[0].toUpperCase()}
-                </div>
-                <div className="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
-                  <FontAwesomeIcon
-                    icon={faCamera}
-                    className="text-white text-xl"
-                  />
-                </div>
+                <input
+                  type="file"
+                  accept="image/*"
+                  onChange={handleAvatarUpload}
+                  className="hidden"
+                  id="avatar-upload"
+                />
+                <label htmlFor="avatar-upload" className="cursor-pointer">
+                  {user.avatarUrl ? (
+                    <img
+                      src={baseURL + "/avatars/" + user.avatarUrl}
+                      className="h-full w-full object-cover rounded-md"
+                      alt=""
+                    />
+                  ) : (
+                    <div className="w-full h-full rounded-lg bg-blue-600 flex items-center justify-center text-white text-3xl font-bold">
+                      {login[0].toUpperCase()}
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-black/50 rounded-lg opacity-0 group-hover:opacity-100 flex items-center justify-center transition-opacity">
+                    <FontAwesomeIcon
+                      icon={faCamera}
+                      className="text-white text-xl"
+                    />
+                  </div>
+                </label>
               </div>
             </div>
 
@@ -101,27 +134,9 @@ const Profile = ({ user, setUser }: ProfileProps) => {
               type="submit"
               className="w-full px-6 py-2 bg-blue-600 text-white rounded font-medium hover:bg-blue-700 transition-colors"
             >
-              Save Changes
+              Сохранить изменения
             </button>
           </form>
-        </div>
-
-        {/* Preview Panel */}
-        <div className="w-1/2 p-6 bg-gray-800">
-          <div className="max-w-md mx-auto">
-            <h2 className="text-lg font-medium text-gray-400 mb-6">Preview</h2>
-            <div className="bg-gray-700 rounded-lg p-6">
-              <div className="flex items-center gap-4">
-                <div className="w-20 h-20 rounded-lg bg-blue-600 flex items-center justify-center text-white text-3xl font-bold shadow-lg">
-                  {login[0].toUpperCase()}
-                </div>
-                <div>
-                  <h3 className="text-xl font-semibold text-white">{login}</h3>
-                  <p className="text-gray-400">#{user.id}</p>
-                </div>
-              </div>
-            </div>
-          </div>
         </div>
       </div>
     </div>

@@ -23,7 +23,7 @@ const ChannelList = ({
 }: ChannelListProps) => {
   const navigate = useNavigate();
   const [rooms, setRooms] = useState<IRoom[]>(allRooms);
-
+  const baseURL = import.meta.env.VITE_PUBLIC_API_URL;
   const addChannel = () => {
     const channelName = prompt(
       "Введите название голосового канала:",
@@ -79,21 +79,28 @@ const ChannelList = ({
                 </span>
               </div>
             ))}
-            с
           </div>
         </div>
       </div>
 
       {/* User Profile */}
       <div
-        className="h-14 px-3 bg-gray-900/40 flex items-center justify-between group hover:bg-gray-900/60 transition-colors duration-200 cursor-pointer"
         onClick={() => navigate("/profile")}
+        className="h-14 px-3 bg-gray-900/40 flex items-center justify-between group hover:bg-gray-900/60 transition-colors duration-200 cursor-pointer"
       >
         <div className="flex items-center">
-          <div className="w-8 h-8 rounded-full bg-[#5865f2] flex items-center justify-center text-white shadow-md">
-            <span className="text-sm font-medium">
-              {currentUser.login[0].toUpperCase()}
-            </span>
+          <div className="w-8 h-8 rounded-full bg-[#5865f2] flex items-center justify-center text-white shadow-md overflow-hidden">
+            {currentUser.avatarUrl ? (
+              <img
+                src={baseURL + "/avatars/" + currentUser.avatarUrl}
+                alt=""
+                className="w-full h-full object-cover"
+              />
+            ) : (
+              <span className="text-sm font-medium">
+                {currentUser.login[0].toUpperCase()}
+              </span>
+            )}
           </div>
           <div className="ml-2">
             <div className="text-sm font-medium text-white">
