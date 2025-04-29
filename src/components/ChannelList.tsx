@@ -1,9 +1,14 @@
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
-import { faVolumeHigh, faPlus } from "@fortawesome/free-solid-svg-icons";
+import {
+  faVolumeHigh,
+  faPlus,
+  faSignOutAlt,
+} from "@fortawesome/free-solid-svg-icons";
 import { useNavigate } from "react-router-dom";
 import IUser from "../types/IUser";
 import IRoom from "../types/IRoom";
+import { authApi } from "../api/services/authApi";
 
 interface ChannelListProps {
   currentUser: IUser;
@@ -42,7 +47,7 @@ const ChannelList = ({
     <div className="w-full h-screen flex flex-col bg-gray-800">
       {/* Server Header */}
       <div className="h-12 px-4 flex items-center justify-between border-b border-gray-700/50 hover:bg-gray-700/20 transition-colors duration-200">
-        <h1 className="font-bold text-white text-lg">GachiHub</h1>
+        <h1 className="font-bold text-white text-lg">VibeCast</h1>
       </div>
 
       {/* Channel List */}
@@ -74,6 +79,7 @@ const ChannelList = ({
                 </span>
               </div>
             ))}
+            с
           </div>
         </div>
       </div>
@@ -95,6 +101,12 @@ const ChannelList = ({
             </div>
           </div>
         </div>
+        <button
+          onClick={() => authApi.logout()}
+          className="text-gray-400 hover:text-white transition-colors"
+        >
+          <FontAwesomeIcon icon={faSignOutAlt} />
+        </button>
       </div>
     </div>
   );
