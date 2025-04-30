@@ -41,12 +41,11 @@ class AuthApi {
       );
       this.navigate("/login");
     } catch (error) {
-      switch (error.code) {
-        case 400:
-          throw new Error("Пользователь уже существует");
-        default:
-          throw new Error("Неизвестная ошибка");
-      }
+      let errorString = "";
+      error.data.errors.map((error) => {
+        errorString = errorString + "\n" + error;
+      });
+      throw new Error(errorString);
     } finally {
       this.isLoading = false;
     }

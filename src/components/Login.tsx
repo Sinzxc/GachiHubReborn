@@ -10,6 +10,7 @@ export const Login = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (login == "" || password == "") setError("Укажите все данные");
       await authApi.login(login, password);
     } catch (err) {
       if (err instanceof Error) setError(err.message || "Failed to login");

@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import {
   faVolumeHigh,
@@ -9,37 +8,29 @@ import { useNavigate } from "react-router-dom";
 import IUser from "../types/IUser";
 import IRoom from "../types/IRoom";
 import { authApi } from "../api/services/authApi";
+import { roomsApi } from "../api/services/roomsApi";
+import { connectionApi } from "../api/services/connectionApi";
 
 interface ChannelListProps {
   currentUser: IUser;
   rooms: IRoom[];
   setCurrentRoom: (room: IRoom) => void;
+  setIsInCall: (value: boolean) => void;
 }
 
 const ChannelList = ({
   currentUser,
   rooms: allRooms,
   setCurrentRoom,
+  setIsInCall,
 }: ChannelListProps) => {
   const navigate = useNavigate();
-  const [rooms, setRooms] = useState<IRoom[]>(allRooms);
   const baseURL = import.meta.env.VITE_PUBLIC_API_URL;
   const addChannel = () => {
-    const channelName = prompt(
-      "Введите название голосового канала:",
-      "Новый канал"
-    );
+    const roomName = prompt("Введите название комнаты:", "Новая комната");
 
-    if (channelName) {
-      const newRoom: IRoom = {
-        id: Math.max(...rooms.map((c) => c.id), 0) + 1,
-        title: channelName,
-        owner: currentUser,
-        messages: [],
-        users: [],
-        totalCount: 0,
-      };
-      setRooms([...rooms, newRoom]);
+    if (roomName) {
+      roomsApi.createRoom(roomName);
     }
   };
 
@@ -65,18 +56,46 @@ const ChannelList = ({
           </div>
           <div className="space-y-1 ml-2">
             {allRooms.map((room) => (
-              <div
-                key={room.id}
-                onClick={() => setCurrentRoom(room)}
-                className="flex items-center px-2 py-[6px] rounded-[4px] hover:bg-gray-700/40 cursor-pointer group transition-all duration-150"
-              >
-                <FontAwesomeIcon
-                  icon={faVolumeHigh}
-                  className="mr-2 text-gray-400 group-hover:text-gray-200 text-[15px]"
-                />
-                <span className="text-[15px] text-gray-400 group-hover:text-gray-200">
-                  {room.title}
-                </span>
+              <div className="px-2 py-[6px] hover:bg-gray-700/40 cursor-pointer group transition-all duration-150">
+                <div
+                  key={room.id}
+                  onClick={() => {
+                    setCurrentRoom(room);
+                    connectionApi.connection?.invoke("JoinRoom", room.id);
+                    setIsInCall(true);
+                  }}
+                  className="flex items-center rounded-[4px] "
+                >
+                  <FontAwesomeIcon
+                    icon={faVolumeHigh}
+                    className="mr-2 text-gray-400 group-hover:text-gray-200 text-[15px]"
+                  />
+                  <span className="text-[15px] text-gray-400 group-hover:text-gray-200">
+                    {room.title}
+                  </span>
+                </div>
+                {room.users.length != 0 && (
+                  <div className="flex flex-col gap-2">
+                    {room.users.map((user) => (
+                      <div className="flex items-center gap-3 mt-3 ml-2">
+                        <div className="w-5 h-5 rounded-full bg-[#5865f2] flex items-center justify-center text-white shadow-md overflow-hidden">
+                          {user.avatarUrl ? (
+                            <img
+                              src={baseURL + "/avatars/" + user.avatarUrl}
+                              alt=""
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <span className="text-[10px] font-medium">
+                              {user.login[0].toUpperCase()}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-white">{user.login}</p>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
