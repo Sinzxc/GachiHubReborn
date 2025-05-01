@@ -17,8 +17,10 @@ const iceServers = [
 ];
 export class PeerConnectionService {
   peerConnections: PeerConnection[] = [];
+  currentUser: IUser | null = null;
 
   createNewPeerConnection = async (userId: number) => {
+    if (userId == this.currentUser?.id) return;
     console.log(
       `[PeerConnectionService] Creating new peer connection for user ID: ${userId}`
     );
@@ -103,6 +105,7 @@ export class PeerConnectionService {
   };
 
   createPeerConnections = (room: IRoom, currentUser: IUser) => {
+    this.currentUser = currentUser;
     console.log(
       `[PeerConnectionService] Creating peer connections for room: ${room.title} (ID: ${room.id})`
     );
@@ -218,6 +221,11 @@ export class PeerConnectionService {
                 event.candidate
               );
             }
+          };
+
+          userConnection.connection.onnegotiationneeded = () => {
+            console.log("onnegotiationneeded");
+            if (userConnection.connection.signalingState != "stable") return;
           };
 
           console.log(

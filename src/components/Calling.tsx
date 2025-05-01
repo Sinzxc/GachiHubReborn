@@ -67,7 +67,7 @@ export default function Calling({
         <audio
           key={user.id}
           id={`remoteAudio-${user.id}`}
-          autoPlay
+          autoPlay={true}
           playsInline
           className="hidden"
         ></audio>
