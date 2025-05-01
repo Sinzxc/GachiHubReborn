@@ -9,6 +9,7 @@ export interface PeerConnection {
   stream?: MediaStream;
 }
 const iceServers = [
+  // { url: "stun:stun1.l.google.com:19302" },
   {
     urls: import.meta.env.VITE_TURN_SERVER_IP,
     username: import.meta.env.VITE_TURN_SERVER_USERNAME,
@@ -20,7 +21,6 @@ export class PeerConnectionService {
   currentUser: IUser | null = null;
 
   createNewPeerConnection = async (userId: number) => {
-    if (userId == this.currentUser?.id) return;
     console.log(
       `[PeerConnectionService] Creating new peer connection for user ID: ${userId}`
     );
@@ -40,8 +40,6 @@ export class PeerConnectionService {
         );
         newPeerConnection.addTrack(track, stream);
       });
-
-      this.createOffer(newPeerConnection);
 
       console.log(
         `[PeerConnectionService] Adding new peer connection to collection for user ID: ${userId}`
@@ -118,7 +116,9 @@ export class PeerConnectionService {
 
     const otherUsers = room.users.filter((user) => user.id != currentUser.id);
     console.log(
-      `[PeerConnectionService] Creating connections for ${otherUsers.length} other users`
+      `[PeerConnectionService] Creating connections for ${
+        otherUsers.length
+      } other users: ${JSON.stringify(otherUsers)}`
     );
 
     otherUsers.map((user) => {
@@ -153,10 +153,12 @@ export class PeerConnectionService {
         console.log(
           `[PeerConnectionService] Received offer from user ID: ${response.fromUserId}`
         );
+        // if (!this.currentUser) return;
         const userConnection = await this.getPeerConnectionByUserId(
           response.fromUserId
         );
         if (userConnection) {
+          console.log("state: ", userConnection.connection.signalingState);
           console.log(
             `[PeerConnectionService] Setting remote description (offer) from user ID: ${response.fromUserId}`
           );
@@ -196,14 +198,23 @@ export class PeerConnectionService {
         console.log(
           `[PeerConnectionService] Received answer from user ID: ${response.fromUserId}`
         );
+        // if (!this.currentUser) return;
+
         const userConnection = await this.getPeerConnectionByUserId(
           response.fromUserId
         );
-
+        console.log("Find userConnection: ", userConnection);
+        console.log(
+          "state (answer): ",
+          userConnection?.connection.signalingState
+        );
+        console.log("founded user:", userConnection);
+        // await new Promise((r) => setTimeout(r, 5000));
         if (userConnection) {
           console.log(
             `[PeerConnectionService] Setting remote description (answer) from user ID: ${response.fromUserId}`
           );
+
           await userConnection.connection.setRemoteDescription(
             new RTCSessionDescription(response.answer)
           );
@@ -212,6 +223,10 @@ export class PeerConnectionService {
             `[PeerConnectionService] Setting up ICE candidate handler for user ID: ${response.fromUserId}`
           );
           userConnection.connection.onicecandidate = (event) => {
+            console.log(
+              "[PeerConnectionService]  ICE candidate event handler: ",
+              event
+            );
             if (event.candidate) {
               console.log(
                 `[PeerConnectionService] ICE candidate generated, sending to user ID: ${response.fromUserId}`
@@ -221,11 +236,6 @@ export class PeerConnectionService {
                 event.candidate
               );
             }
-          };
-
-          userConnection.connection.onnegotiationneeded = () => {
-            console.log("onnegotiationneeded");
-            if (userConnection.connection.signalingState != "stable") return;
           };
 
           console.log(
@@ -250,6 +260,9 @@ export class PeerConnectionService {
               );
             }
           };
+          userConnection.connection.oniceconnectionstatechange = (event) => {
+            console.log("StageChanged on: ", event);
+          };
         } else {
           console.log(
             `[PeerConnectionService] No connection found for user ID: ${response.fromUserId}, cannot process answer`
@@ -265,6 +278,7 @@ export class PeerConnectionService {
           `[PeerConnectionService] Received ICE candidate from user ID: ${response.fromUserId}`
         );
         try {
+          // if (!this.currentUser) return;
           const userConnection = await this.getPeerConnectionByUserId(
             response.fromUserId
           );
@@ -302,6 +316,14 @@ export class PeerConnectionService {
     console.log(
       `[PeerConnectionService] All SignalR event handlers registered`
     );
+
+    connectionApi.connection?.on("InitiateOffer", async (user: IUser) => {
+      this.peerConnections
+        .filter((connection) => connection.userId != user.id)
+        .map((connection) => {
+          this.createOffer(connection.connection);
+        });
+    });
   };
 }
 
