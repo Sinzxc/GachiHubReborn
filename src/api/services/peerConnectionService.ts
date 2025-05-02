@@ -11,11 +11,12 @@ export interface PeerConnection {
 const iceServers = [
   // { url: "stun:stun1.l.google.com:19302" },
   {
-    urls: import.meta.env.VITE_TURN_SERVER_IP,
-    username: import.meta.env.VITE_TURN_SERVER_USERNAME,
-    credential: import.meta.env.VITE_TURN_SERVER_CREDENTIAL,
+    urls: "turn:91.103.252.198:3478",
+    username: "12345",
+    credential: "12345",
   },
 ];
+console.log(iceServers);
 export class PeerConnectionService {
   peerConnections: PeerConnection[] = [];
   currentUser: IUser | null = null;
@@ -53,13 +54,13 @@ export class PeerConnectionService {
     return newPeerConnection;
   };
 
-  createOffer = async (peerConnection: RTCPeerConnection) => {
+  createOffer = async (peerConnection: RTCPeerConnection, targetId: number) => {
     console.log(`[PeerConnectionService] Creating offer for peer connection`);
     const offer = await peerConnection.createOffer();
     console.log(`[PeerConnectionService] Setting local description (offer)`);
     await peerConnection.setLocalDescription(offer);
     console.log(`[PeerConnectionService] Sending offer via SignalR`);
-    connectionApi.connection?.invoke("SendOffer", offer);
+    connectionApi.connection?.invoke("SendOffer", offer, targetId);
   };
 
   removePeerConnection = (userId: number) => {
@@ -233,7 +234,8 @@ export class PeerConnectionService {
               );
               connectionApi.connection?.invoke(
                 "SendCandidate",
-                event.candidate
+                event.candidate,
+                response.fromUserId
               );
             }
           };
@@ -306,13 +308,6 @@ export class PeerConnectionService {
       }
     );
 
-    connectionApi.connection?.on("JoinedRoom", (user: IUser, room: IRoom) => {
-      console.log(
-        `[PeerConnectionService] User with ID: ${user.id} Joined to room: ${room.id}`
-      );
-      this.createNewPeerConnection(user.id);
-    });
-
     console.log(
       `[PeerConnectionService] All SignalR event handlers registered`
     );
@@ -321,7 +316,7 @@ export class PeerConnectionService {
       this.peerConnections
         .filter((connection) => connection.userId != user.id)
         .map((connection) => {
-          this.createOffer(connection.connection);
+          this.createOffer(connection.connection, connection.userId);
         });
     });
   };

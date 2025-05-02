@@ -26,24 +26,37 @@ export default function Calling({
 }) {
   const [localStream, setLocalStream] = useState<MediaStream>();
   const [volume, setVolume] = useState<number>(100);
+  const peerConnectionServiceRef = useRef(peerConnectionService);
 
-  useEffect(() => {
-    if (isInCall && currentRoom) {
-      console.log(
-        `[Calling] Starting call in room: ${currentRoom.title} (ID: ${currentRoom.id})`
-      );
-      peerConnectionService.createPeerConnections(currentRoom, currentUser);
-    } else {
-      console.log(
-        `[Calling] Ending call or no room selected, removing peer connections`
-      );
-      peerConnectionService.removeAllPeerConnections();
-    }
-  }, [isInCall]);
+  // useEffect(() => {
+  //   if (isInCall && currentRoom) {
+  //     console.log(
+  //       `[Calling] Starting call in room: ${currentRoom.title} (ID: ${currentRoom.id})`
+  //     );
+  //     peerConnectionServiceRef.current.createPeerConnections(
+  //       currentRoom,
+  //       currentUser
+  //     );
+  //   } else {
+  //     console.log(
+  //       `[Calling] Ending call or no room selected, removing peer connections`
+  //     );
+  //     peerConnectionServiceRef.current.removeAllPeerConnections();
+  //   }
+  // }, [isInCall, currentRoom]);
 
   useEffect(() => {
     console.log(`[Calling] Subscribing to SignalR connection events`);
-    peerConnectionService.subscribeOnEvents();
+    peerConnectionServiceRef.current.subscribeOnEvents();
+
+    connectionApi.connection?.on("JoinedRoom", (user: IUser, room: IRoom) => {
+      console.log(
+        `[PeerConnectionService] User with ID: ${user.id} Joined to room: ${room.id}`
+      );
+      setCurrentRoom(room);
+      if (user.id != currentUser.id)
+        peerConnectionServiceRef.current.createNewPeerConnection(user.id);
+    });
 
     return () => {
       console.log(`[Calling] Unsubscribing from SignalR connection events`);
@@ -61,17 +74,37 @@ export default function Calling({
     }
   }, [currentRoom]);
 
+  const f = () => {
+    if (currentRoom) {
+      console.log(
+        `[Calling] Starting call in room: ${currentRoom.title} (ID: ${currentRoom.id})`
+      );
+      peerConnectionServiceRef.current.createPeerConnections(
+        currentRoom,
+        currentUser
+      );
+    } else {
+      console.log(
+        `[Calling] Ending call or no room selected, removing peer connections`
+      );
+      peerConnectionServiceRef.current.removeAllPeerConnections();
+    }
+  };
+
   return (
     <>
       {currentRoom?.users.map((user) => (
-        <audio
-          key={user.id}
-          id={`remoteAudio-${user.id}`}
-          autoPlay
-          playsInline
-          className="hidden"
-        ></audio>
+        <>
+          <audio
+            key={user.id}
+            id={`remoteAudio-${user.id}`}
+            autoPlay
+            playsInline
+            className="hidden"
+          ></audio>
+        </>
       ))}
+      <button onClick={() => f()}>Test</button>
     </>
   );
 }
